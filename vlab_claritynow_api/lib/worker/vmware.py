@@ -129,11 +129,6 @@ def _setup_vm(vcenter, the_vm):
                                          user='administrator',
                                          password='a',
                                          arguments=args1)
-    if result1.exitCode:
-        error = 'Failed to disable NTP on the server'
-        logger.error('{}: ExitCode {}, CMD {},'.format(error, result1.exitCode, result1.cmdLine))
-        raise RuntimeError(error)
-
     logger.info('Setting date to 2018-09-28')
     cmd2 = '/usr/bin/sudo'
     args2 = '/usr/bin/timedatectl set-time 2018-09-28'
@@ -143,10 +138,6 @@ def _setup_vm(vcenter, the_vm):
                                          user='administrator',
                                          password='a',
                                          arguments=args2)
-    if result2.exitCode:
-        error = 'Failed to set the date to 2018-09-28'
-        logger.error('{}: ExitCode {}, CMD {},'.format(error, result2.exitCode, result2.cmdLine))
-        raise RuntimeError(error)
 
 
 def list_images():
