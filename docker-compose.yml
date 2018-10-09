@@ -1,0 +1,31 @@
+version: '3'
+services:
+  claritynow-api:
+    ports:
+      - "5000:5000"
+    image:
+      willnx/vlab-claritynow-api
+    environment:
+      - VLAB_URL=https://localhost
+      - INF_VCENTER_SERVER=virtlab.igs.corp
+      - INF_VCENTER_USER=Administrator@vsphere.local
+      - INF_VCENTER_PASSWORD=1.Password
+    volumes:
+      - ./vlab_claritynow_api:/usr/lib/python3.6/site-packages/vlab_claritynow_api
+    command: ["python3", "app.py"]
+
+  claritynow-worker:
+    image:
+      willnx/vlab-claritynow-worker
+    volumes:
+      - ./vlab_claritynow_api:/usr/lib/python3.6/site-packages/vlab_claritynow_api
+      - /mnt/raid/images/claritynow:/images:ro
+    environment:
+      - INF_VCENTER_SERVER=ChangeME
+      - INF_VCENTER_USER=ChangeME
+      - INF_VCENTER_PASSWORD=ChangeME
+      - INF_VCENTER_TOP_LVL_DIR=/vlab
+
+  claritynow-broker:
+    image:
+      rabbitmq:3.7-alpine
