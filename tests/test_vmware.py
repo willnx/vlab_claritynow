@@ -141,6 +141,7 @@ class TestVMware(unittest.TestCase):
         """``_setup_vm`` Raises RuntimeError if the 1st command fails"""
         fake_vcenter = MagicMock()
         fake_vm = MagicMock()
+        fake_run_command.side_effect = [RuntimeError("testing"), RuntimeError("testing")]
 
         with self.assertRaises(RuntimeError):
             vmware._setup_vm(fake_vcenter, fake_vm)
@@ -152,7 +153,7 @@ class TestVMware(unittest.TestCase):
         fake_vm = MagicMock()
         fake_result1 = MagicMock()
         fake_result1.exitCode = None
-        fake_result2 = MagicMock()
+        fake_result2 = RuntimeError('testing')
         fake_run_command.side_effect = [fake_result1, fake_result2]
 
         with self.assertRaises(RuntimeError):
