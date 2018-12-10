@@ -21,10 +21,18 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'worked': True, 'note': 'ClarityNow=1.0.0'}
+        fake_get_info.return_value = {'component': 'ClarityNow',
+                                      'created': 1234,
+                                      'version': '3.28',
+                                      'configured': True,
+                                      'generation': 1}
 
         output = vmware.show_claritynow(username='alice')
-        expected = {'ClarityNow': {'note': 'ClarityNow=1.0.0', 'worked': True}}
+        expected = {'ClarityNow': {'component': 'ClarityNow',
+                                   'created': 1234,
+                                   'version': '3.28',
+                                   'configured': True,
+                                   'generation': 1}}
 
         self.assertEqual(output, expected)
 
@@ -40,7 +48,11 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'note' : 'ClarityNow=1.0.0'}
+        fake_get_info.return_value = {'component': 'ClarityNow',
+                                      'created': 1234,
+                                      'version': '3.28',
+                                      'configured': True,
+                                      'generation': 1}
 
         output = vmware.delete_claritynow(username='bob', machine_name='ClarityNowBox', logger=fake_logger)
         expected = None
@@ -64,25 +76,27 @@ class TestVMware(unittest.TestCase):
         with self.assertRaises(ValueError):
             vmware.delete_claritynow(username='bob', machine_name='myOtherClarityNowBox', logger=fake_logger)
 
+    @patch.object(vmware.virtual_machine, 'set_meta')
     @patch.object(vmware, '_setup_vm')
     @patch.object(vmware, 'Ova')
     @patch.object(vmware.virtual_machine, 'get_info')
     @patch.object(vmware.virtual_machine, 'deploy_from_ova')
     @patch.object(vmware, 'consume_task')
     @patch.object(vmware, 'vCenter')
-    def test_create_claritynow(self, fake_vCenter, fake_consume_task, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_setup_vm):
+    def test_create_claritynow(self, fake_vCenter, fake_consume_task, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_setup_vm, fake_set_meta):
         """``create_claritynow`` returns a dictionary upon success"""
         fake_logger = MagicMock()
+        fake_deploy_from_ova.return_value.name = 'ClarityNowBox'
         fake_get_info.return_value = {'worked': True}
         fake_Ova.return_value.networks = ['someLAN']
         fake_vCenter.return_value.__enter__.return_value.networks = {'someLAN' : vmware.vim.Network(moId='1')}
 
         output = vmware.create_claritynow(username='alice',
-                                       machine_name='ClarityNowBox',
-                                       image='1.0.0',
-                                       network='someLAN',
-                                       logger=fake_logger)
-        expected = {'worked': True}
+                                          machine_name='ClarityNowBox',
+                                          image='1.0.0',
+                                          network='someLAN',
+                                          logger=fake_logger)
+        expected = {'ClarityNowBox' : {'worked': True}}
 
         self.assertEqual(output, expected)
 

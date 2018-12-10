@@ -16,15 +16,13 @@ def show_claritynow(username):
     :param username: The user requesting info about their ClarityNow
     :type username: String
     """
-    info = {}
+    claritynow_vms = {}
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER, \
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         folder = vcenter.get_by_name(name=username, vimtype=vim.Folder)
-        claritynow_vms = {}
         for vm in folder.childEntity:
             info = virtual_machine.get_info(vcenter, vm)
-            kind, version = info['note'].split('=')
-            if kind == 'ClarityNow':
+            if info['component'] == 'ClarityNow':
                 claritynow_vms[vm.name] = info
     return claritynow_vms
 
@@ -49,8 +47,7 @@ def delete_claritynow(username, machine_name, logger):
         for entity in folder.childEntity:
             if entity.name == machine_name:
                 info = virtual_machine.get_info(vcenter, entity)
-                kind, version = info['note'].split('=')
-                if kind == 'ClarityNow':
+                if info['component'] == 'ClarityNow':
                     logger.debug('powering off VM')
                     virtual_machine.power(entity, state='off')
                     delete_task = entity.Destroy_Task()
@@ -101,12 +98,16 @@ def create_claritynow(username, machine_name, image, network, logger):
                                                      username, machine_name, logger)
         finally:
             ova.close()
-        spec = vim.vm.ConfigSpec()
-        spec.annotation = 'ClarityNow={}'.format(image)
-        task = the_vm.ReconfigVM_Task(spec)
-        consume_task(task)
         _setup_vm(vcenter, the_vm, logger)
-        return virtual_machine.get_info(vcenter, the_vm)
+        meta_data = {'component' : "ClarityNow",
+                     'created': time.time(),
+                     'version': image,
+                     'configured': True,
+                     'generation': 1,
+                    }
+        virtual_machine.set_meta(the_vm, meta_data)
+        info = virtual_machine.get_info(vcenter, the_vm)
+        return {the_vm.name: info}
 
 
 def _setup_vm(vcenter, the_vm, logger):
