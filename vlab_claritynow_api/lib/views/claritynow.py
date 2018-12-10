@@ -57,7 +57,7 @@ class ClarityNowView(TaskView):
                     }
 
 
-    @requires(verify=const.VLAB_VERIFY_TOKEN, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @describe(post=POST_SCHEMA, delete=DELETE_SCHEMA, get=GET_SCHEMA)
     def get(self, *args, **kwargs):
         """Display the ClarityNow instances you own"""
@@ -70,7 +70,7 @@ class ClarityNowView(TaskView):
         resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
         return resp
 
-    @requires(verify=const.VLAB_VERIFY_TOKEN, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @validate_input(schema=POST_SCHEMA)
     def post(self, *args, **kwargs):
         """Create a ClarityNow"""
@@ -87,7 +87,7 @@ class ClarityNowView(TaskView):
         resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
         return resp
 
-    @requires(verify=const.VLAB_VERIFY_TOKEN, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @validate_input(schema=DELETE_SCHEMA)
     def delete(self, *args, **kwargs):
         """Destroy a ClarityNow"""
@@ -102,7 +102,7 @@ class ClarityNowView(TaskView):
         return resp
 
     @route('/image', methods=["GET"])
-    @requires(verify=const.VLAB_VERIFY_TOKEN, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @describe(get=IMAGES_SCHEMA)
     def image(self, *args, **kwargs):
         """Show available versions of ClarityNow that can be deployed"""
