@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
-TODO
+Defines the RESTful API for the ClarityNow service
 """
 import ujson
 from flask import current_app
@@ -17,7 +17,7 @@ logger = get_logger(__name__, loglevel=const.VLAB_CLARITYNOW_LOG_LEVEL)
 
 
 class ClarityNowView(TaskView):
-    """API end point TODO"""
+    """API end point to manage ClarityNow instances"""
     route_base = '/api/1/inf/claritynow'
     POST_SCHEMA = { "$schema": "http://json-schema.org/draft-04/schema#",
                     "type": "object",
@@ -57,44 +57,47 @@ class ClarityNowView(TaskView):
                     }
 
 
-    @requires(verify=False, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @describe(post=POST_SCHEMA, delete=DELETE_SCHEMA, get=GET_SCHEMA)
     def get(self, *args, **kwargs):
         """Display the ClarityNow instances you own"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('claritynow.show', [username])
+        task = current_app.celery_app.send_task('claritynow.show', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
         resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
         return resp
 
-    @requires(verify=False, version=(1,2)) # XXX remove verify=False before commit
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @validate_input(schema=POST_SCHEMA)
     def post(self, *args, **kwargs):
         """Create a ClarityNow"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         body = kwargs['body']
         machine_name = body['name']
         image = body['image']
         network = body['network']
-        task = current_app.celery_app.send_task('claritynow.create', [username, machine_name, image, network])
+        task = current_app.celery_app.send_task('claritynow.create', [username, machine_name, image, network, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
         resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
         return resp
 
-    @requires(verify=False, version=(1,2)) # XXX remove verify=False before commit
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @validate_input(schema=DELETE_SCHEMA)
     def delete(self, *args, **kwargs):
         """Destroy a ClarityNow"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         machine_name = kwargs['body']['name']
-        task = current_app.celery_app.send_task('claritynow.delete', [username, machine_name])
+        task = current_app.celery_app.send_task('claritynow.delete', [username, machine_name, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -102,13 +105,14 @@ class ClarityNowView(TaskView):
         return resp
 
     @route('/image', methods=["GET"])
-    @requires(verify=False, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     @describe(get=IMAGES_SCHEMA)
     def image(self, *args, **kwargs):
         """Show available versions of ClarityNow that can be deployed"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('claritynow.image')
+        task = current_app.celery_app.send_task('claritynow.image', [txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
