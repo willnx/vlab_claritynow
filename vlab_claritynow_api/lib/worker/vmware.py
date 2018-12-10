@@ -85,7 +85,11 @@ def create_claritynow(username, machine_name, image, network, logger):
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         image_name = convert_name(image)
         logger.info(image_name)
-        ova = Ova(os.path.join(const.VLAB_CLARITYNOW_IMAGES_DIR, image_name))
+        try:
+            ova = Ova(os.path.join(const.VLAB_CLARITYNOW_IMAGES_DIR, image_name))
+        except FileNotFoundError:
+            error = "Invalid version of ClarityNow supplied: {}".format(image)
+            raise ValueError(error)
         try:
             network_map = vim.OvfManager.NetworkMapping()
             network_map.name = ova.networks[0]
