@@ -3,14 +3,9 @@
 import time
 import random
 import os.path
-from celery.utils.log import get_task_logger
 from vlab_inf_common.vmware import vCenter, Ova, vim, virtual_machine, consume_task
 
 from vlab_claritynow_api.lib import const
-
-
-logger = get_task_logger(__name__)
-logger.setLevel(const.VLAB_CLARITYNOW_LOG_LEVEL.upper())
 
 
 def show_claritynow(username):
@@ -34,7 +29,7 @@ def show_claritynow(username):
     return claritynow_vms
 
 
-def delete_claritynow(username, machine_name):
+def delete_claritynow(username, machine_name, logger):
     """Unregister and destroy a user's ClarityNow
 
     :Returns: None
@@ -44,6 +39,9 @@ def delete_claritynow(username, machine_name):
 
     :param machine_name: The name of the VM to delete
     :type machine_name: String
+
+    :param logger: An object for logging messages
+    :type logger: logging.LoggerAdapter
     """
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER, \
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
@@ -63,7 +61,7 @@ def delete_claritynow(username, machine_name):
             raise ValueError('No {} named {} found'.format('claritynow', machine_name))
 
 
-def create_claritynow(username, machine_name, image, network):
+def create_claritynow(username, machine_name, image, network, logger):
     """Deploy a new instance of ClarityNow
 
     :Returns: Dictionary
@@ -79,6 +77,9 @@ def create_claritynow(username, machine_name, image, network):
 
     :param network: The name of the network to connect the new ClarityNow instance up to
     :type network: String
+
+    :param logger: An object for logging messages
+    :type logger: logging.LoggerAdapter
     """
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
@@ -100,11 +101,11 @@ def create_claritynow(username, machine_name, image, network):
         spec.annotation = 'ClarityNow={}'.format(image)
         task = the_vm.ReconfigVM_Task(spec)
         consume_task(task)
-        _setup_vm(vcenter, the_vm)
+        _setup_vm(vcenter, the_vm, logger)
         return virtual_machine.get_info(vcenter, the_vm)
 
 
-def _setup_vm(vcenter, the_vm):
+def _setup_vm(vcenter, the_vm, logger):
     """Configure the ClarityNow server
 
     The license is only good for 60 days, so we have to perform a time hack
@@ -119,6 +120,9 @@ def _setup_vm(vcenter, the_vm):
 
     :param the_vm: The new ClarityNow server
     :type the_vm: vim.VirtualMachine
+
+    :param logger: An object for logging messages
+    :type logger: logging.LoggerAdapter
     """
     cmd1 = '/usr/bin/sudo'
     args1 = '/usr/bin/timedatectl set-ntp 0'

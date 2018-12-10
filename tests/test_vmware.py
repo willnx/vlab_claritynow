@@ -34,6 +34,7 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_claritynow(self, fake_vCenter, fake_consume_task, fake_power, fake_get_info):
         """``delete_claritynow`` returns None when everything works as expected"""
+        fake_logger = MagicMock()
         fake_vm = MagicMock()
         fake_vm.name = 'ClarityNowBox'
         fake_folder = MagicMock()
@@ -41,7 +42,7 @@ class TestVMware(unittest.TestCase):
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
         fake_get_info.return_value = {'note' : 'ClarityNow=1.0.0'}
 
-        output = vmware.delete_claritynow(username='bob', machine_name='ClarityNowBox')
+        output = vmware.delete_claritynow(username='bob', machine_name='ClarityNowBox', logger=fake_logger)
         expected = None
 
         self.assertEqual(output, expected)
@@ -52,6 +53,7 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_claritynow_value_error(self, fake_vCenter, fake_consume_task, fake_power, fake_get_info):
         """``delete_claritynow`` raises ValueError when unable to find requested vm for deletion"""
+        fake_logger = MagicMock()
         fake_vm = MagicMock()
         fake_vm.name = 'win10'
         fake_folder = MagicMock()
@@ -60,7 +62,7 @@ class TestVMware(unittest.TestCase):
         fake_get_info.return_value = {'note' : 'ClarityNow=1.0.0'}
 
         with self.assertRaises(ValueError):
-            vmware.delete_claritynow(username='bob', machine_name='myOtherClarityNowBox')
+            vmware.delete_claritynow(username='bob', machine_name='myOtherClarityNowBox', logger=fake_logger)
 
     @patch.object(vmware, '_setup_vm')
     @patch.object(vmware, 'Ova')
@@ -70,6 +72,7 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_create_claritynow(self, fake_vCenter, fake_consume_task, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_setup_vm):
         """``create_claritynow`` returns a dictionary upon success"""
+        fake_logger = MagicMock()
         fake_get_info.return_value = {'worked': True}
         fake_Ova.return_value.networks = ['someLAN']
         fake_vCenter.return_value.__enter__.return_value.networks = {'someLAN' : vmware.vim.Network(moId='1')}
@@ -77,7 +80,8 @@ class TestVMware(unittest.TestCase):
         output = vmware.create_claritynow(username='alice',
                                        machine_name='ClarityNowBox',
                                        image='1.0.0',
-                                       network='someLAN')
+                                       network='someLAN',
+                                       logger=fake_logger)
         expected = {'worked': True}
 
         self.assertEqual(output, expected)
@@ -89,6 +93,7 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_create_claritynow_invalid_network(self, fake_vCenter, fake_consume_task, fake_deploy_from_ova, fake_get_info, fake_Ova):
         """``create_claritynow`` raises ValueError if supplied with a non-existing network"""
+        fake_logger = MagicMock()
         fake_get_info.return_value = {'worked': True}
         fake_Ova.return_value.networks = ['someLAN']
         fake_vCenter.return_value.__enter__.return_value.networks = {'someLAN' : vmware.vim.Network(moId='1')}
@@ -97,7 +102,8 @@ class TestVMware(unittest.TestCase):
             vmware.create_claritynow(username='alice',
                                   machine_name='ClarityNowBox',
                                   image='1.0.0',
-                                  network='someOtherLAN')
+                                  network='someOtherLAN',
+                                  logger=fake_logger)
 
     @patch.object(vmware.os, 'listdir')
     def test_list_images(self, fake_listdir):
@@ -127,11 +133,12 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware.virtual_machine, 'run_command')
     def test_setup_vm(self, fake_run_command):
         """``_setup_vm`` returns None when everything works as expected"""
+        fake_logger = MagicMock()
         fake_vcenter = MagicMock()
         fake_vm = MagicMock()
         fake_run_command.return_value.exitCode = None
 
-        output = vmware._setup_vm(fake_vcenter, fake_vm)
+        output = vmware._setup_vm(fake_vcenter, fake_vm, fake_logger)
         expected = None
 
         self.assertEqual(output, expected)
@@ -139,16 +146,18 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware.virtual_machine, 'run_command')
     def test_setup_vm_cmd1_failure(self, fake_run_command):
         """``_setup_vm`` Raises RuntimeError if the 1st command fails"""
+        fake_logger = MagicMock()
         fake_vcenter = MagicMock()
         fake_vm = MagicMock()
         fake_run_command.side_effect = [RuntimeError("testing"), RuntimeError("testing")]
 
         with self.assertRaises(RuntimeError):
-            vmware._setup_vm(fake_vcenter, fake_vm)
+            vmware._setup_vm(fake_vcenter, fake_vm, fake_logger)
 
     @patch.object(vmware.virtual_machine, 'run_command')
     def test_setup_vm_cmd2_failure(self, fake_run_command):
         """``_setup_vm`` Raises RuntimeError if the 2nd command fails"""
+        fake_logger = MagicMock()
         fake_vcenter = MagicMock()
         fake_vm = MagicMock()
         fake_result1 = MagicMock()
@@ -157,7 +166,7 @@ class TestVMware(unittest.TestCase):
         fake_run_command.side_effect = [fake_result1, fake_result2]
 
         with self.assertRaises(RuntimeError):
-            vmware._setup_vm(fake_vcenter, fake_vm)
+            vmware._setup_vm(fake_vcenter, fake_vm, fake_logger)
 
 
 if __name__ == '__main__':

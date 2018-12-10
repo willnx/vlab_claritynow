@@ -17,7 +17,7 @@ logger = get_logger(__name__, loglevel=const.VLAB_CLARITYNOW_LOG_LEVEL)
 
 
 class ClarityNowView(TaskView):
-    """API end point TODO"""
+    """API end point to manage ClarityNow instances"""
     route_base = '/api/1/inf/claritynow'
     POST_SCHEMA = { "$schema": "http://json-schema.org/draft-04/schema#",
                     "type": "object",
@@ -62,8 +62,9 @@ class ClarityNowView(TaskView):
     def get(self, *args, **kwargs):
         """Display the ClarityNow instances you own"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('claritynow.show', [username])
+        task = current_app.celery_app.send_task('claritynow.show', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -75,12 +76,13 @@ class ClarityNowView(TaskView):
     def post(self, *args, **kwargs):
         """Create a ClarityNow"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         body = kwargs['body']
         machine_name = body['name']
         image = body['image']
         network = body['network']
-        task = current_app.celery_app.send_task('claritynow.create', [username, machine_name, image, network])
+        task = current_app.celery_app.send_task('claritynow.create', [username, machine_name, image, network, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -92,9 +94,10 @@ class ClarityNowView(TaskView):
     def delete(self, *args, **kwargs):
         """Destroy a ClarityNow"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         machine_name = kwargs['body']['name']
-        task = current_app.celery_app.send_task('claritynow.delete', [username, machine_name])
+        task = current_app.celery_app.send_task('claritynow.delete', [username, machine_name, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -107,8 +110,9 @@ class ClarityNowView(TaskView):
     def image(self, *args, **kwargs):
         """Show available versions of ClarityNow that can be deployed"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('claritynow.image')
+        task = current_app.celery_app.send_task('claritynow.image', [txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
