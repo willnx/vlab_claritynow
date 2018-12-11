@@ -21,18 +21,18 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'component': 'ClarityNow',
-                                      'created': 1234,
-                                      'version': '3.28',
-                                      'configured': True,
-                                      'generation': 1}
+        fake_get_info.return_value = {'meta' : {'component': 'ClarityNow',
+                                                'created': 1234,
+                                                'version': '3.28',
+                                                'configured': True,
+                                                'generation': 1}}
 
         output = vmware.show_claritynow(username='alice')
-        expected = {'ClarityNow': {'component': 'ClarityNow',
-                                   'created': 1234,
-                                   'version': '3.28',
-                                   'configured': True,
-                                   'generation': 1}}
+        expected = {'ClarityNow': {'meta' : {'component': 'ClarityNow',
+                                             'created': 1234,
+                                             'version': '3.28',
+                                             'configured': True,
+                                             'generation': 1}}}
 
         self.assertEqual(output, expected)
 
@@ -48,11 +48,11 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'component': 'ClarityNow',
-                                      'created': 1234,
-                                      'version': '3.28',
-                                      'configured': True,
-                                      'generation': 1}
+        fake_get_info.return_value = {'meta' : {'component': 'ClarityNow',
+                                                'created': 1234,
+                                                'version': '3.28',
+                                                'configured': True,
+                                                'generation': 1}}
 
         output = vmware.delete_claritynow(username='bob', machine_name='ClarityNowBox', logger=fake_logger)
         expected = None
