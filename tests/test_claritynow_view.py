@@ -34,9 +34,19 @@ class TestClarityNowView(unittest.TestCase):
         cls.fake_task.id = 'asdf-asdf-asdf'
         app.celery_app.send_task.return_value = cls.fake_task
 
-    def test_get_task(self):
-        """ClarityNowView - GET on /api/1/inf/claritynow returns a task-id"""
+    def test_v1_deprecated(self):
+        """ClarityNowView - GET on /api/1/inf/claritynow returns an HTTP 404"""
         resp = self.app.get('/api/1/inf/claritynow',
+                            headers={'X-Auth': self.token})
+
+        status = resp.status_code
+        expected = 404
+
+        self.assertEqual(status, expected)
+
+    def test_get_task(self):
+        """ClarityNowView - GET on /api/2/inf/claritynow returns a task-id"""
+        resp = self.app.get('/api/2/inf/claritynow',
                             headers={'X-Auth': self.token})
 
         task_id = resp.json['content']['task-id']
@@ -45,18 +55,18 @@ class TestClarityNowView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_get_task_link(self):
-        """ClarityNowView - GET on /api/1/inf/claritynow sets the Link header"""
-        resp = self.app.get('/api/1/inf/claritynow',
+        """ClarityNowView - GET on /api/2/inf/claritynow sets the Link header"""
+        resp = self.app.get('/api/2/inf/claritynow',
                             headers={'X-Auth': self.token})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
     def test_post_task(self):
-        """ClarityNowView - POST on /api/1/inf/claritynow returns a task-id"""
-        resp = self.app.post('/api/1/inf/claritynow',
+        """ClarityNowView - POST on /api/2/inf/claritynow returns a task-id"""
+        resp = self.app.post('/api/2/inf/claritynow',
                              headers={'X-Auth': self.token},
                              json={'network': "someLAN",
                                    'name': "myClarityNowBox",
@@ -68,21 +78,21 @@ class TestClarityNowView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_post_task_link(self):
-        """ClarityNowView - POST on /api/1/inf/claritynow sets the Link header"""
-        resp = self.app.post('/api/1/inf/claritynow',
+        """ClarityNowView - POST on /api/2/inf/claritynow sets the Link header"""
+        resp = self.app.post('/api/2/inf/claritynow',
                              headers={'X-Auth': self.token},
                              json={'network': "someLAN",
                                    'name': "myClarityNowBox",
                                    'image': "someVersion"})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
     def test_delete_task(self):
-        """ClarityNowView - DELETE on /api/1/inf/claritynow returns a task-id"""
-        resp = self.app.delete('/api/1/inf/claritynow',
+        """ClarityNowView - DELETE on /api/2/inf/claritynow returns a task-id"""
+        resp = self.app.delete('/api/2/inf/claritynow',
                                headers={'X-Auth': self.token},
                                json={'name' : 'myClarityNowBox'})
 
@@ -92,19 +102,19 @@ class TestClarityNowView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_delete_task_link(self):
-        """ClarityNowView - DELETE on /api/1/inf/claritynow sets the Link header"""
-        resp = self.app.delete('/api/1/inf/claritynow',
+        """ClarityNowView - DELETE on /api/2/inf/claritynow sets the Link header"""
+        resp = self.app.delete('/api/2/inf/claritynow',
                                headers={'X-Auth': self.token},
                                json={'name' : 'myClarityNowBox'})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
     def test_image(self):
         """ClarityNowView - GET on the ./image end point returns the a task-id"""
-        resp = self.app.get('/api/1/inf/claritynow/image',
+        resp = self.app.get('/api/2/inf/claritynow/image',
                             headers={'X-Auth': self.token})
 
         task_id = resp.json['content']['task-id']
@@ -114,11 +124,11 @@ class TestClarityNowView(unittest.TestCase):
 
     def test_image(self):
         """ClarityNowView - GET on the ./image end point sets the Link header"""
-        resp = self.app.get('/api/1/inf/claritynow/image',
+        resp = self.app.get('/api/2/inf/claritynow/image',
                             headers={'X-Auth': self.token})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/claritynow/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
