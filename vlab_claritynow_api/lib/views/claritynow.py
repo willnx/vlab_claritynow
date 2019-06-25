@@ -18,7 +18,7 @@ logger = get_logger(__name__, loglevel=const.VLAB_CLARITYNOW_LOG_LEVEL)
 
 class ClarityNowView(MachineView):
     """API end point to manage ClarityNow instances"""
-    route_base = '/api/1/inf/claritynow'
+    route_base = '/api/2/inf/claritynow'
     RESOURCE = 'claritynow'
     POST_SCHEMA = { "$schema": "http://json-schema.org/draft-04/schema#",
                     "type": "object",
@@ -82,7 +82,7 @@ class ClarityNowView(MachineView):
         body = kwargs['body']
         machine_name = body['name']
         image = body['image']
-        network = body['network']
+        network = '{}_{}'.format(username, body['network'])
         task = current_app.celery_app.send_task('claritynow.create', [username, machine_name, image, network, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
